@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "platform/board.h"
 #include "platform/i2c_bus.h"
 #include "adapters/mpu6050_adapter.h"
@@ -33,7 +35,8 @@ void app_main(void)
     Mpu6050 imu = {
         .context = s_imu,
         .read_register = i2c_bus_read_register,
-        .write_register = i2c_bus_write_register
+        .write_register = i2c_bus_write_register,
+        .read_registers = i2c_bus_read_registers
     };
 
     /* Raw read of WHO_AM_I so we can see the actual byte. */
@@ -51,5 +54,24 @@ void app_main(void)
     /* First register WRITE: PWR_MGMT_1 <- 0x01 (awake, gyro clock), then read back. */
     ImuStatus wake_status = mpu6050_wake(&imu);
     printf("Wake: status %d\n", wake_status);
+    if (wake_status != IMU_STATUS_OK) {
+        return;
+    }
+
+    /* Read and print raw motion data every 100 ms. Tilt the board and watch it change. */
+    Mpu6050RawSample sample;
+    while (1) {
+        status = mpu6050_read_raw(&imu, &sample);
+        if (status == IMU_STATUS_OK) {
+            printf("accel %6d %6d %6d | gyro %6d %6d %6d\n",
+                   sample.accel[0], sample.accel[1], sample.accel[2],
+                   sample.gyro[0], sample.gyro[1], sample.gyro[2]);
+        } else {
+            printf("read_raw failed: status %d\n", status);
+        }
+
+        /* Sleep this task for 100 ms; FreeRTOS runs other work meanwhile. */
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 
 }

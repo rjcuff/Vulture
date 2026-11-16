@@ -1,6 +1,7 @@
 #ifndef VULTURE_I2C_BUS_H
 #define VULTURE_I2C_BUS_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include "esp_err.h"
 #include "driver/i2c_master.h"
@@ -23,6 +24,9 @@ esp_err_t i2c_bus_probe(uint16_t address);
  */
 ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,
                                 uint8_t *out_value);
+
+ImuStatus i2c_bus_read_registers(void *context, uint8_t start_register,
+                                 uint8_t *out_buffer, size_t length);
 
 /*
  * Write one register on a device: START, [addr+W], [register_address], [value], STOP.

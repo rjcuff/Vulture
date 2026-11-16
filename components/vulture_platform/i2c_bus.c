@@ -64,20 +64,29 @@ esp_err_t i2c_bus_probe(uint16_t address)
     return i2c_master_probe(s_bus, address, I2C_BUS_TIMEOUT_MS);
 }
 
-ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,
-                                uint8_t *out_value)
+ImuStatus i2c_bus_read_registers(void *context, uint8_t start_register,
+                                 uint8_t *out_buffer, size_t length)
 {
     /* The adapter hands us a generic pointer; we know it's our device handle. */
     i2c_master_dev_handle_t dev = (i2c_master_dev_handle_t) context;
 
-    /* On the wire: START, [addr+W], [register_address], REPEATED START,
-     * [addr+R], [one byte -> *out_value], STOP. */
+    /* On the wire: START, [addr+W], [start_register], REPEATED START,
+     * [addr+R], [length bytes -> out_buffer], STOP.
+     * No loop: the sensor auto-increments its register pointer after each byte,
+     * so one transaction returns consecutive registers from the same instant. */
     esp_err_t err = i2c_master_transmit_receive(dev,
-                                                &register_address, 1,  /* send 1 byte: which register */
-                                                out_value, 1,          /* read 1 byte: its contents  */
+                                                &start_register, 1,     /* send 1 byte: where to start */
+                                                out_buffer, length,     /* read length bytes           */
                                                 I2C_BUS_TIMEOUT_MS);
 
     return to_imu_status(err);
+}
+
+ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,
+                                uint8_t *out_value)
+{
+    /* A single read is just a burst read of length 1. */
+    return i2c_bus_read_registers(context, register_address, out_value, 1);
 }
 
 ImuStatus i2c_bus_write_register(void *context, uint8_t register_address, uint8_t value){
