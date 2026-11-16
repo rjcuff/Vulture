@@ -1,0 +1,18 @@
+{
+  // No AI: Copilot and inline ghost-text completions off.
+  "github.copilot.enable": { "*": false },
+  "editor.inlineSuggest.enabled": false,
+
+  // Keep IntelliSense: hovers, struct fields after ".", variable names, function args.
+  "editor.hover.enabled": "on",
+  "editor.quickSuggestions": { "other": true, "comments": false, "strings": false },
+  "editor.suggestOnTriggerCharacters": true,
+  "editor.parameterHints.enabled": true,
+  "editor.wordBasedSuggestions": "off",
+
+  // Basic editing help.
+  "editor.autoClosingBrackets": "always",
+  "editor.autoClosingQuotes": "always",
+  "editor.autoIndent": "full",
+  "C_Cpp.errorSquiggles": "disabled"
+}
