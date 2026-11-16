@@ -18,7 +18,7 @@ esp_err_t i2c_bus_probe(uint16_t address);
 
 /*
  * Read one register from a device: write the register address, repeated START,
- * read one byte. Matches Mpu9250ReadRegister so it can be plugged into an adapter.
+ * read one byte. Matches Mpu6050ReadRegister so it can be plugged into an adapter.
  * context must be an i2c_master_dev_handle_t from i2c_bus_add_device.
  */
 ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,

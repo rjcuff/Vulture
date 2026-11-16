@@ -54,23 +54,22 @@ esp_err_t i2c_bus_probe(uint16_t address)
 ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,
                                 uint8_t *out_value)
 {
-    /*
-     * TODO(Ryan): step 3, this one is yours.
-     *
-     * 1. Cast context back to an i2c_master_dev_handle_t.
-     * 2. Call i2c_master_transmit_receive(dev,
-     *        <pointer to the register byte>, <how many bytes to write>,
-     *        <where to read into>,           <how many bytes to read>,
-     *        I2C_BUS_TIMEOUT_MS);
-     * 3. Map esp_err_t to ImuStatus:
-     *        ESP_OK          -> IMU_STATUS_OK
-     *        ESP_ERR_TIMEOUT -> IMU_STATUS_TIMEOUT
-     *        anything else   -> IMU_STATUS_COMMUNICATION_ERROR
-     *
-     * Until then it reports "not ready" so the project still builds.
-     */
-    (void)context;
-    (void)register_address;
-    (void)out_value;
-    return IMU_STATUS_NOT_READY;
+    /* The adapter hands us a generic pointer; we know it's our device handle. */
+    i2c_master_dev_handle_t dev = (i2c_master_dev_handle_t) context;
+
+    /* On the wire: START, [addr+W], [register_address], REPEATED START,
+     * [addr+R], [one byte -> *out_value], STOP. */
+    esp_err_t err = i2c_master_transmit_receive(dev,
+                                                &register_address, 1,  /* send 1 byte: which register */
+                                                out_value, 1,          /* read 1 byte: its contents  */
+                                                I2C_BUS_TIMEOUT_MS);
+
+    /* Translate ESP-IDF errors into Vulture's own status codes. */
+    if (err == ESP_OK) {
+        return IMU_STATUS_OK;
+    } else if (err == ESP_ERR_TIMEOUT) {
+        return IMU_STATUS_TIMEOUT;
+    } else {
+        return IMU_STATUS_COMMUNICATION_ERROR;
+    }
 }

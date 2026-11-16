@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "platform/board.h"
 #include "platform/i2c_bus.h"
-#include "adapters/mpu9250_adapter.h"
+#include "adapters/mpu6050_adapter.h"
 
 /* Startup sequence. Each step stops the boot if it fails. */
 
@@ -29,6 +29,18 @@ void app_main(void)
         return;
     }
 
-    /* TODO(Ryan): step 4, build an Mpu9250 with s_imu + i2c_bus_read_register,
-     * read WHO_AM_I, and print the raw byte. */
+    /* Hand the sensor adapter two things: which device, and how to read from it. */
+    Mpu6050 imu = {
+        .context = s_imu,
+        .read_register = i2c_bus_read_register,
+    };
+
+    /* Raw read of WHO_AM_I so we can see the actual byte. */
+    uint8_t who_am_i = 0;
+    ImuStatus status = imu.read_register(imu.context, MPU6050_REG_WHO_AM_I, &who_am_i);
+    printf("WHO_AM_I read: status %d, value 0x%02X\n", status, who_am_i);
+
+    /* Your identity check from vulture_core. */
+    status = mpu6050_check_identity(&imu);
+    printf("Identity check: status %d\n", status);
 }

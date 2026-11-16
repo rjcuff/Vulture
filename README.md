@@ -41,7 +41,7 @@ components/
 
 **Rule:** `vulture_core` never includes ESP-IDF headers, so it can be compiled and
 unit-tested on a laptop. Sensor adapters reach hardware only through function
-pointers (for example `Mpu9250ReadRegister`) that `vulture_platform` supplies.
+pointers (for example `Mpu6050ReadRegister`) that `vulture_platform` supplies.
 
 ## Build
 
@@ -59,8 +59,8 @@ idf.py -p /dev/cu.usbmodem<port> flash monitor   # Ctrl+] to exit
 - [x] ESP-IDF project skeleton, first flash
 - [x] I2C bus on GPIO4/5, MPU added at `0x68`
 - [x] MPU ACKs a probe
-- [ ] Register read over I2C (`i2c_bus_read_register`)
-- [ ] Read WHO_AM_I (`0x75`) and verify the chip
+- [x] Register read over I2C (`i2c_bus_read_register`)
+- [x] Read WHO_AM_I (`0x75`) and verify the chip (MPU-6050 → `0x68`)
 - [ ] Read raw accel/gyro (`0x3B`–`0x48`)
 - [ ] Convert to `ImuSample` units
 - [ ] Attitude estimation
