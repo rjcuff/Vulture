@@ -29,10 +29,11 @@ void app_main(void)
         return;
     }
 
-    /* Hand the sensor adapter two things: which device, and how to read from it. */
+    /* Hand the sensor adapter: which device, and how to read and write its registers. */
     Mpu6050 imu = {
         .context = s_imu,
         .read_register = i2c_bus_read_register,
+        .write_register = i2c_bus_write_register
     };
 
     /* Raw read of WHO_AM_I so we can see the actual byte. */
@@ -43,4 +44,12 @@ void app_main(void)
     /* Your identity check from vulture_core. */
     status = mpu6050_check_identity(&imu);
     printf("Identity check: status %d\n", status);
+    if (status != IMU_STATUS_OK) {
+        return;
+    }
+
+    /* First register WRITE: PWR_MGMT_1 <- 0x01 (awake, gyro clock), then read back. */
+    ImuStatus wake_status = mpu6050_wake(&imu);
+    printf("Wake: status %d\n", wake_status);
+
 }

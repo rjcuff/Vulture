@@ -7,6 +7,19 @@
 /* The one bus instance. Private: other files go through the functions below. */
 static i2c_master_bus_handle_t s_bus;
 
+/* Translate ESP-IDF errors into Vulture's own status codes.
+ * The one place this mapping lives; ESP-IDF error types stop here. */
+static ImuStatus to_imu_status(esp_err_t err)
+{
+    if (err == ESP_OK) {
+        return IMU_STATUS_OK;
+    } else if (err == ESP_ERR_TIMEOUT) {
+        return IMU_STATUS_TIMEOUT;
+    } else {
+        return IMU_STATUS_COMMUNICATION_ERROR;
+    }
+}
+
 esp_err_t i2c_bus_init(void)
 {
     if (s_bus != NULL) {
@@ -64,12 +77,19 @@ ImuStatus i2c_bus_read_register(void *context, uint8_t register_address,
                                                 out_value, 1,          /* read 1 byte: its contents  */
                                                 I2C_BUS_TIMEOUT_MS);
 
-    /* Translate ESP-IDF errors into Vulture's own status codes. */
-    if (err == ESP_OK) {
-        return IMU_STATUS_OK;
-    } else if (err == ESP_ERR_TIMEOUT) {
-        return IMU_STATUS_TIMEOUT;
-    } else {
-        return IMU_STATUS_COMMUNICATION_ERROR;
-    }
+    return to_imu_status(err);
+}
+
+ImuStatus i2c_bus_write_register(void *context, uint8_t register_address, uint8_t value){
+
+    i2c_master_dev_handle_t dev = (i2c_master_dev_handle_t) context;
+
+    const uint8_t buffer_arr[2] = {register_address, value};
+
+    esp_err_t err = i2c_master_transmit(dev,
+                                        buffer_arr,
+                                        sizeof(buffer_arr),
+                                        I2C_BUS_TIMEOUT_MS);
+
+    return to_imu_status(err);
 }
