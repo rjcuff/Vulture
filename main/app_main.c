@@ -6,6 +6,7 @@
 #define VULTURE_I2C_SCL         GPIO_NUM_5
 #define MPU_I2C_ADDR            0x68
 #define MPU_I2C_SCL_SPEED_HZ    (100 * 1000)
+#define MPU_I2C_TIMEOUT_MS      (5 * 100)
 
 /* File-scope so other functions in this file can use the bus later. */
 static i2c_master_bus_handle_t s_bus;
@@ -41,5 +42,16 @@ void app_main(void)
 
     esp_err_t mpu_err = i2c_master_bus_add_device(s_bus,&mpu_config,&s_mpu);
     printf("MPU add device: %s\n", esp_err_to_name(mpu_err));
+
+    if (mpu_err != ESP_OK) {
+        return;
+    }
+
+    esp_err_t probe_err = i2c_master_probe(s_bus, MPU_I2C_ADDR, MPU_I2C_TIMEOUT_MS);
+    printf("MPU probe: %s\n", esp_err_to_name(probe_err));
+
+    if (probe_err != ESP_OK) {
+        return;
+    }
 
 }
